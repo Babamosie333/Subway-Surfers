@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subway Surfers Game</title>
+    <link rel="icon" href="img/FirstAvatar.png">
+
+    <base href="https://cdn.jsdelivr.net/gh/bubbls/subwaysurfersmerge/">
+
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Subway Surfers - Made by Vikram Singh">
+    <meta property="og:description" content="Play this exciting clone of Subway Surfers, developed and customized by Vikram Singh. Dash, dodge, and surf the rails!">
+    <meta property="og:image" content="img/FirstAvatar.jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Subway Surfers - Made by Vikram Singh">
+    <meta name="twitter:description" content="Play this exciting clone of Subway Surfers, developed and customized by Vikram Singh. Dash, dodge, and surf the rails!">
+    <meta name="twitter:image" content="img/FirstAvatar.jpeg">
+
+    <script src="4399.z.js"></script>
+
+
+    <script>
+        window.config = {
+            loader: "unity",
+            debug: false,
+            maxRatio: 16 / 9,
+            minRatio: 9 / 16,
+            title: "Subway Surfers: Zurich",
+            unityVersion: "2019.4.18f1",
+            unityWebglBuildUrl: "ZurichNewPrivacy.json",
+            fileSize: 36,
+            cachedDecompressedFileSizes: {
+                "ZurichNewPrivacy.asm.code.unityweb": 9078047,
+                "ZurichNewPrivacy.asm.framework.unityweb": 86375,
+                "ZurichNewPrivacy.asm.memory.unityweb": 956748,
+                "ZurichNewPrivacy.data.unityweb": 19164736,
+                "ZurichNewPrivacy.wasm.code.unityweb": 7282721,
+                "ZurichNewPrivacy.wasm.framework.unityweb": 90700
+            }
+        };
+
+        window.mergedBlobUrls = {};
+        window.assetsReady = false;
+
+        async function mergeSplitFile(fileUrlBase, numParts = 2) {
+            const partUrls = Array.from(
+                { length: numParts },
+                (_, i) => `${fileUrlBase}.part${i + 1}`
+            );
+
+            try {
+                const responses = await Promise.all(
+                    partUrls.map(url => fetch(url))
+                );
+
+                if (responses.some(r => !r.ok)) {
+                    return null;
+                }
+
+                const parts = await Promise.all(
+                    responses.map(r => r.arrayBuffer())
+                );
+
+                const combinedBlob = new Blob(parts, {
+                    type: "application/octet-stream"
+                });
+
+                return URL.createObjectURL(combinedBlob);
+
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function setupXHRInterceptor() {
+            if (window.xhrInterceptorInstalled) {
+                return;
+            }
+
+            const originalOpen = XMLHttpRequest.prototype.open;
+            const originalSend = XMLHttpRequest.prototype.send;
+
+            XMLHttpRequest.prototype.open = function (method, url, ...args) {
+                this._url = url;
+                this._method = method;
+                this._args = args;
+
+                let finalUrl = url;
+
+                for (const [filename, blobUrl] of Object.entries(window.mergedBlobUrls)) {
+                    if (url.includes(filename)) {
+                        finalUrl = blobUrl;
+                        break;
+                    }
+                }
+
+                return originalOpen.call(
+                    this,
+                    method,
+                    finalUrl,
+                    ...args
+                );
+            };
+
+            XMLHttpRequest.prototype.send = function (...args) {
+                const xhr = this;
+
+                if (!window.assetsReady) {
+                    const checkReady = setInterval(() => {
+                        if (window.assetsReady) {
+                            clearInterval(checkReady);
+                            originalSend.apply(xhr, args);
+                        }
+                    }, 50);
+
+                    return;
+                }
+
+                return originalSend.apply(this, args);
+            };
+
+            window.xhrInterceptorInstalled = true;
+        }
+
+        async function prepareGameAssets() {
+            try {
+                window.assetsReady = false;
+                delete window.xhrInterceptorInstalled;
+                window.mergedBlobUrls = {};
+
+                setupXHRInterceptor();
+
+                const filesToMerge = [
+                    "ZurichNewPrivacy.data.unityweb",
+                    "ZurichNewPrivacy.wasm.code.unityweb"
+                ];
+
+                for (const filename of filesToMerge) {
+                    const blobUrl = await mergeSplitFile(filename, 2);
+
+                    if (blobUrl) {
+                        window.mergedBlobUrls[filename] = blobUrl;
+                    }
+                }
+
+                window.assetsPrepared = true;
+                window.assetsReady = true;
+
+            } catch (error) {
+                window.assetsPrepared = false;
+                window.assetsReady = true;
+            }
+        }
+
+        prepareGameAssets();
+    </script>
+</head>
+
+<body>
+
+    <script src="master-loader.js"></script>
+
+    <script>
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+
+            if (!document.fullscreenElement) {
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+
+            } else {
+
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "f" || event.key === "F") {
+                toggleFullscreen();
+            }
+        });
+    </script>
+
+</body>
+</html>
